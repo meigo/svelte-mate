@@ -30,9 +30,5 @@ export const STACK_SUMMARY = [
 export const MODEL_OPTIONS: { value: string; label: string; hint?: string }[] = [
   { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6', hint: 'balanced, fast' },
   { value: 'claude-opus-4-6', label: 'Claude Opus 4.6', hint: 'smartest, slowest, costliest' },
-  {
-    value: 'claude-haiku-4-5-20251001',
-    label: 'Claude Haiku 4.5',
-    hint: 'cheap, best for small edits',
-  },
+  { value: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', hint: 'cheap, best for small edits' },
 ];
