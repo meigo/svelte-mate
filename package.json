@@ -1,0 +1,29 @@
+{
+  "name": "svelte-mate",
+  "version": "0.1.0",
+  "description": "Focused CLI that generates SvelteKit + Tailwind v4 sites with Claude Code. Explicit stack, no guesswork.",
+  "type": "module",
+  "bin": {
+    "svelte-mate": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "check": "biome check src/",
+    "check:fix": "biome check --write src/"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT"
+}
