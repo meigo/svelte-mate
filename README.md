@@ -9,7 +9,8 @@ The stack is locked and explicit so the agent can't guess-and-fail:
 - Tailwind CSS `^4.0.0` wired via `@tailwindcss/vite` — not the PostCSS plugin
 - Vite `^6.0.0`
 - `svelte-check` `^4.0.0` for `.svelte` + TypeScript type-checking
-- Biome `^1.9.4` (linter + formatter — no ESLint, no Prettier)
+- Biome `^1.9.4` (linter + formatter for `.ts` / `.js` / `.json` — no ESLint)
+- Prettier `^3.3.0` + `prettier-plugin-svelte` `^3.3.0` (formatter for `.svelte` only)
 - TypeScript strict
 - The official [Svelte Claude Code skills](https://github.com/sveltejs/ai-tools) (`svelte-code-writer`, `svelte-core-bestpractices`) installed into `.claude/skills/`
 
@@ -92,8 +93,8 @@ Picking a specific adapter instead of keeping `adapter-auto` is a deliberate cho
 
 1. **Scaffolds** a fresh SvelteKit project into the current directory (empty required) with every config file pinned (`package.json`, `svelte.config.js`, `vite.config.ts`, `tsconfig.json`, `biome.json`, `src/app.html`, `src/app.css`, `src/app.d.ts`, `src/routes/+layout.svelte`, `src/routes/+page.svelte`). If you picked a deploy target, the adapter, platform config, and `npm run deploy` script are written too. Runs `npm install` + `svelte-kit sync`, commits the scaffold.
 2. **Installs** the official Svelte Claude Code skills (`svelte-code-writer`, `svelte-core-bestpractices`) from `sveltejs/ai-tools` into `.claude/skills/` and writes a permissive `.claude/settings.json`. Saves your model + deploy choice to `.svelte-mate.json` so `fix` can reuse them.
-3. **Invokes Claude Code** in the project directory with an explicit prompt that declares the locked stack, points at the installed skills, and demands `svelte-check` + `biome check` + `vite build` all pass.
-4. **Verifies** by running those three commands itself after the agent exits.
+3. **Invokes Claude Code** in the project directory with an explicit prompt that declares the locked stack, points at the installed skills, and demands `svelte-check` + `biome check` + `prettier --check` + `vite build` all pass.
+4. **Verifies** by running those four commands itself after the agent exits.
 5. **Retries** on verification failure — up to `--max-retries` times — feeding the previous error back to the agent.
 6. **Fails honestly**. After the retry budget is spent, it prints the last failure and stops. No infinite loops, no silent "success".
 
@@ -101,7 +102,7 @@ Picking a specific adapter instead of keeping `adapter-auto` is a deliberate cho
 
 - One site per run, serial.
 - Your prompt goes straight to the agent — no intake interview.
-- Verification is hardcoded: `svelte-check`, `biome check`, `vite build`.
+- Verification is hardcoded: `svelte-check`, `biome check`, `prettier --check`, `vite build`.
 - Claude Code only (for now).
 - Builds sites, not test suites — no test scaffolding.
 
@@ -110,7 +111,7 @@ Picking a specific adapter instead of keeping `adapter-auto` is a deliberate cho
 - **Explicit over clever.** Every dep, every config file is hand-rolled and pinned. The agent never has to guess "is it `@tailwindcss/postcss` or `@tailwindcss/vite`?" — the scaffold has the answer already. Deploy targets pin the adapter for the same reason.
 - **Honest failure beats eternal fixing.** The outer retry loop is capped. If Claude can't make it green in N tries, you see the real error and decide.
 - **Runes-first.** The scaffolded `+page.svelte` uses `$state` and the layout uses `$props`, so the agent has no excuse to fall back on legacy Svelte 4 idioms.
-- **Biome skips `.svelte`.** Biome doesn't parse Svelte templates, so `*.svelte` is in its ignore list. `svelte-check` handles Svelte + TS correctness; Biome handles plain `.ts` / `.js` / `.json`.
+- **Biome skips `.svelte`, Prettier owns `.svelte`.** Biome doesn't parse Svelte templates, so `*.svelte` is in its ignore list. `svelte-check` handles Svelte + TS correctness, Biome formats and lints `.ts` / `.js` / `.json`, and Prettier + `prettier-plugin-svelte` formats `.svelte` (scoped via `**/*.svelte` in the scripts — Prettier never touches non-Svelte files). Clear per-extension ownership, no tool overlap.
 
 ## Enhancement ideas
 
