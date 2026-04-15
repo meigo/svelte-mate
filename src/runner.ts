@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { log } from './logger.js';
+import { Spinner } from './spinner.js';
 
 export interface RunOptions {
   cwd: string;
@@ -45,12 +46,25 @@ export function runClaude(opts: RunOptions): Promise<RunResult> {
       if (tail.length > TAIL_BYTES) tail = tail.slice(-TAIL_BYTES);
     };
 
+    // Cover the silent startup gap before Claude emits its first byte.
+    // Cleared on first output (or close) so it never overlaps with Claude's stream.
+    const spinner = new Spinner('Waiting for Claude…');
+    spinner.start();
+    let firstByteSeen = false;
+    const onFirstByte = (): void => {
+      if (firstByteSeen) return;
+      firstByteSeen = true;
+      spinner.stop();
+    };
+
     child.stdout.on('data', (b: Buffer) => {
+      onFirstByte();
       const t = b.toString();
       append(t);
       process.stdout.write(t);
     });
     child.stderr.on('data', (b: Buffer) => {
+      onFirstByte();
       const t = b.toString();
       append(t);
       process.stderr.write(t);
@@ -61,6 +75,7 @@ export function runClaude(opts: RunOptions): Promise<RunResult> {
     const finish = (code: number | null): void => {
       if (settled) return;
       settled = true;
+      spinner.stop();
       clearTimeout(timer);
       signal?.removeEventListener('abort', onAbort);
       try {
