@@ -10,6 +10,8 @@ export const STACK = {
   vite: '^6.0.0',
   tailwind: '^4.0.0',
   biome: '^1.9.4',
+  prettier: '^3.3.0',
+  prettierPluginSvelte: '^3.3.0',
   typescript: '^5.7.0',
 } as const;
 
@@ -23,7 +25,8 @@ export const STACK_SUMMARY = [
   `Tailwind CSS ${STACK.tailwind} (via @tailwindcss/vite plugin)`,
   `Vite ${STACK.vite}`,
   `svelte-check ${STACK.svelteCheck}`,
-  `Biome ${STACK.biome} (lint + format)`,
+  `Biome ${STACK.biome} (lint + format for .ts/.js/.json)`,
+  `Prettier ${STACK.prettier} + prettier-plugin-svelte ${STACK.prettierPluginSvelte} (format for .svelte)`,
   `TypeScript ${STACK.typescript} (strict)`,
 ].join(', ');
 

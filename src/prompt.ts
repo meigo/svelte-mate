@@ -38,7 +38,8 @@ The project has already been scaffolded for you. Files in place:
 - \`src/routes/+page.svelte\` — home page. Replace its contents.
 - \`src/app.d.ts\` — ambient types for \`App.Locals\`, \`App.PageData\`, etc.
 - \`tsconfig.json\` — extends \`.svelte-kit/tsconfig.json\`. Keep strict mode. \`svelte-kit sync\` must have been run for this file to resolve.
-- \`biome.json\` — Biome is the only linter/formatter for \`.ts\` / \`.js\` / \`.json\`. \`.svelte\` files are ignored by Biome; rely on \`svelte-check\` for those.
+- \`biome.json\` — Biome is the only linter/formatter for \`.ts\` / \`.js\` / \`.json\`. \`.svelte\` files are ignored by Biome.
+- \`.prettierrc.json\` + \`.prettierignore\` — Prettier + \`prettier-plugin-svelte\` is the only formatter for \`.svelte\` files. Do not run Prettier against \`.ts\` / \`.js\` / \`.json\`; that is Biome's territory.
 - Skills installed under \`.claude/skills/\`:
 ${skillList}
   Consult them for Svelte 5 runes, SvelteKit routing, load functions, form actions, styling, and deployment patterns.
@@ -55,28 +56,30 @@ ${skillList}
 1. Implement the user's prompt on top of the scaffold.
 2. All Svelte + TypeScript must pass \`svelte-check\` with zero errors and zero warnings.
 3. All \`.ts\` / \`.js\` / \`.json\` must pass \`biome check src/\` with zero errors (auto-fix with \`npm run biome:fix\` when safe).
-4. \`npm run build\` must succeed (SvelteKit production build) with no warnings that would break production.
+4. All \`.svelte\` files must pass \`prettier --check "**/*.svelte"\` with zero errors (auto-fix with \`npm run prettier:fix\` when safe).
+5. \`npm run build\` must succeed (SvelteKit production build) with no warnings that would break production.
 
-## Your verification loop — run all three, fix until green
+## Your verification loop — run all four, fix until green
 
 Before exiting, **you must** run every one of these and iterate until each returns 0:
 
 \`\`\`bash
 npm run svelte:check
 npm run biome:check
+npm run prettier:check
 npm run build
 \`\`\`
 
 If an error appears, read it carefully, fix the root cause, and run the failing command again. Do not suppress errors with \`any\`, \`@ts-ignore\`, or biome \`// biome-ignore\` directives unless there is a genuinely unavoidable reason — and if you must, add a short comment explaining why.
 
-Keep going until all three commands exit 0. Do not exit early claiming "the important parts work" — the verification loop is the definition of done.
+Keep going until all four commands exit 0. Do not exit early claiming "the important parts work" — the verification loop is the definition of done.
 
 ## Scope discipline
 
 - Do NOT install extra dependencies unless the user's prompt makes them necessary. No UI kits, no icon libraries, no analytics, no CMS. If the prompt asks for a feature that genuinely needs one (e.g. MDsveX, a specific deploy adapter), install the appropriate package.
 - Do NOT create tests unless the user asked for them. This tool is for generating sites, not test suites.
 - Do NOT touch files outside this project directory.
-- Do NOT modify \`.claude/\` or \`biome.json\` or the Tailwind/Vite wiring.
+- Do NOT modify \`.claude/\` or \`biome.json\` or \`.prettierrc.json\` or the Tailwind/Vite wiring.
 
 ## Commit
 
