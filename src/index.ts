@@ -244,7 +244,7 @@ async function runLoop(input: LoopInput): Promise<void> {
       continue;
     }
 
-    lastVerify = verify(cwd);
+    lastVerify = await verify(cwd);
     if (lastVerify.ok) {
       printSuccess(cwd, attempt);
       return;

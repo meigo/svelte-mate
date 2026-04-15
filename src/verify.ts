@@ -1,5 +1,6 @@
-import { spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { log } from './logger.js';
+import { Spinner } from './spinner.js';
 
 export interface VerifyStep {
   name: string;
@@ -25,27 +26,44 @@ const STEPS: VerifyStep[] = [
   { name: 'vite build', command: 'npm', args: ['run', 'build', '--silent'] },
 ];
 
-export function verify(cwd: string): VerifyResult {
+export async function verify(cwd: string): Promise<VerifyResult> {
   const steps: StepResult[] = [];
   for (const step of STEPS) {
-    log.step(`Verify: ${step.name}`);
-    const result = spawnSync(step.command, step.args, {
-      cwd,
-      encoding: 'utf-8',
-      env: { ...process.env, CI: '1', FORCE_COLOR: '0' },
-    });
-    const combined = `${result.stdout ?? ''}\n${result.stderr ?? ''}`.trim();
-    const ok = result.status === 0;
-    steps.push({ name: step.name, ok, output: combined });
-    if (ok) {
+    const spinner = new Spinner(`Verify: ${step.name}`);
+    spinner.start();
+    let result: { ok: boolean; output: string };
+    try {
+      result = await runStep(step, cwd);
+    } finally {
+      spinner.stop();
+    }
+    steps.push({ name: step.name, ok: result.ok, output: result.output });
+    if (result.ok) {
       log.ok(`${step.name} passed`);
     } else {
       log.fail(`${step.name} failed`);
-      const failureSummary = formatFailure(step.name, combined);
-      return { ok: false, steps, failureSummary };
+      return { ok: false, steps, failureSummary: formatFailure(step.name, result.output) };
     }
   }
   return { ok: true, steps };
+}
+
+function runStep(step: VerifyStep, cwd: string): Promise<{ ok: boolean; output: string }> {
+  return new Promise((resolve) => {
+    const child = spawn(step.command, step.args, {
+      cwd,
+      env: { ...process.env, CI: '1', FORCE_COLOR: '0' },
+    });
+    const chunks: string[] = [];
+    child.stdout.on('data', (b: Buffer) => chunks.push(b.toString()));
+    child.stderr.on('data', (b: Buffer) => chunks.push(b.toString()));
+    child.on('error', (err) => {
+      resolve({ ok: false, output: `Failed to spawn: ${err.message}` });
+    });
+    child.on('close', (code) => {
+      resolve({ ok: code === 0, output: chunks.join('').trim() });
+    });
+  });
 }
 
 function formatFailure(stepName: string, output: string): string {
