@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { type DeployTarget, applyDeployConfig } from './deploy.js';
+import { applyDeployConfig, type DeployTarget } from './deploy.js';
 import { log } from './logger.js';
 import { STACK } from './stack.js';
 
