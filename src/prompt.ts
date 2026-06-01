@@ -40,6 +40,11 @@ The project has already been scaffolded for you. Files in place:
 - \`tsconfig.json\` — extends \`.svelte-kit/tsconfig.json\`. Keep strict mode. \`svelte-kit sync\` must have been run for this file to resolve.
 - \`biome.json\` — Biome is the only linter/formatter for \`.ts\` / \`.js\` / \`.json\`. \`.svelte\` files are ignored by Biome.
 - \`.prettierrc.json\` + \`.prettierignore\` — Prettier + \`prettier-plugin-svelte\` is the only formatter for \`.svelte\` files. Do not run Prettier against \`.ts\` / \`.js\` / \`.json\`; that is Biome's territory.
+- \`src/lib/site.ts\` — exports \`SITE_URL\` (your production origin). \`Seo.svelte\` and the sitemap import it; don't hardcode the domain elsewhere.
+- \`src/lib/components/Seo.svelte\` — head component (title, description, canonical, Open Graph, Twitter, JSON-LD). Render it once per page with a real \`title\` + \`description\`.
+- \`src/routes/sitemap.xml/+server.ts\` — prerendered sitemap; auto-lists static pages via \`import.meta.glob\`. New static routes are picked up automatically; for dynamic (\`[param]\`) routes, add their URLs there manually.
+- \`static/robots.txt\` — allows all crawlers incl. AI bots and points at the sitemap. Keep it valid if you edit it.
+- \`src/app.css\` — also imports \`@fontsource-variable/inter\` and wires it to Tailwind's \`--font-sans\`; \`<body>\` carries \`font-sans\`.
 - Skills installed under \`.claude/skills/\`:
 ${skillList}
   Consult them for Svelte 5 runes, SvelteKit routing, load functions, form actions, styling, and deployment patterns.
@@ -58,6 +63,9 @@ ${skillList}
 3. All \`.ts\` / \`.js\` / \`.json\` must pass \`biome check src/\` with zero errors (auto-fix with \`npm run biome:fix\` when safe).
 4. All \`.svelte\` files must pass \`prettier --check "**/*.svelte"\` with zero errors (auto-fix with \`npm run prettier:fix\` when safe).
 5. \`npm run build\` must succeed (SvelteKit production build) with no warnings that would break production.
+6. Give every page a meaningful title and description by rendering \`<Seo title="…" description="…" />\` (import from \`$lib/components/Seo.svelte\`). Add page-appropriate JSON-LD via the \`jsonLd\` prop where it fits (Article, Product, Organization). Use semantic HTML: landmarks (\`<header>\`, \`<main>\`, \`<footer>\`), one \`<h1>\` per page, \`alt\` on images, accessible names on controls, visible focus states.
+7. Meet WCAG 2.1 AA color contrast: ≥4.5:1 for normal text, ≥3:1 for large text. Beware muted Tailwind pairings that fail on light backgrounds (e.g. \`text-slate-400\`/\`text-slate-500\` on white) — pick a darker shade or a darker background.
+8. Choose a Google/Fontsource font (or a heading/body pairing) that fits the site's tone/brand and wire it: install the matching \`@fontsource[-variable]/<name>\` package, update the \`@import\` and \`--font-sans\` in \`src/app.css\` (add a \`--font-heading\` variable + an \`h1\`–\`h6\` base rule if pairing). Leaving Inter is valid.
 
 ## Your verification loop — run all four, fix until green
 
@@ -76,7 +84,7 @@ Keep going until all four commands exit 0. Do not exit early claiming "the impor
 
 ## Scope discipline
 
-- Do NOT install extra dependencies unless the user's prompt makes them necessary. No UI kits, no icon libraries, no analytics, no CMS. If the prompt asks for a feature that genuinely needs one (e.g. MDsveX, a specific deploy adapter), install the appropriate package.
+- Do NOT install extra dependencies unless the user's prompt makes them necessary. No UI kits, no icon libraries, no analytics, no CMS. Installing one additional \`@fontsource[-variable]/<name>\` package for the chosen font is expected and fine. If the prompt genuinely needs a feature (e.g. MDsveX, a specific deploy adapter), install the appropriate package. The sitemap and SEO baseline are already wired — do not add a sitemap plugin.
 - Do NOT create tests unless the user asked for them. This tool is for generating sites, not test suites.
 - Do NOT touch files outside this project directory.
 - Do NOT modify \`.claude/\` or \`biome.json\` or \`.prettierrc.json\` or the Tailwind/Vite wiring.
