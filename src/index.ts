@@ -4,6 +4,7 @@ import path from 'node:path';
 import chalk from 'chalk';
 import { DEPLOY_TARGETS, type DeployTarget } from './deploy.js';
 import { collectPrompt, selectOption } from './dialog.js';
+import { gitHead, projectChangedSince } from './git-state.js';
 import { log } from './logger.js';
 import { readProjectConfig, writeProjectConfig } from './project-config.js';
 import { buildPrompt } from './prompt.js';
@@ -202,6 +203,7 @@ interface LoopInput {
 
 async function runLoop(input: LoopInput): Promise<void> {
   const { cwd, userPrompt, args } = input;
+  const baselineHead = gitHead(cwd);
   const controller = new AbortController();
   const onSig = (): void => {
     log.warn('Received interrupt, aborting agent');
@@ -246,6 +248,12 @@ async function runLoop(input: LoopInput): Promise<void> {
 
     lastVerify = await verify(cwd);
     if (lastVerify.ok) {
+      if (!projectChangedSince(cwd, baselineHead)) {
+        log.fail('Verification passed but the project is unchanged — the agent wrote nothing.');
+        lastError =
+          'Verification passed, but you made no changes to the project. The bare scaffold already passes all four checks, so a green build with no edits does not count. You must actually implement the requested site (create/edit files) and then make all four verification commands pass.';
+        continue;
+      }
       printSuccess(cwd, attempt);
       return;
     }
