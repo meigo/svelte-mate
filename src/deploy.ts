@@ -29,13 +29,13 @@ const DEPLOY_CONFIGS: Record<
   cloudflare: (name) => ({
     adapterPackage: '@sveltejs/adapter-cloudflare',
     adapterVersion: STACK.adapterCloudflare,
-    cliDeps: { wrangler: '^3.90.0' },
+    cliDeps: { wrangler: '^4.95.0' },
     deployScript: 'wrangler pages deploy .svelte-kit/cloudflare',
     svelteConfig: svelteConfigFor('@sveltejs/adapter-cloudflare', ''),
     platformFile: {
       path: 'wrangler.toml',
       contents: `name = "${name}"
-compatibility_date = "2024-11-01"
+compatibility_date = "2026-05-01"
 pages_build_output_dir = ".svelte-kit/cloudflare"
 `,
     },
@@ -44,7 +44,7 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
   vercel: () => ({
     adapterPackage: '@sveltejs/adapter-vercel',
     adapterVersion: STACK.adapterVercel,
-    cliDeps: { vercel: '^37.0.0' },
+    cliDeps: { vercel: '^54.6.1' },
     deployScript: 'vercel deploy --prod --yes',
     svelteConfig: svelteConfigFor('@sveltejs/adapter-vercel', "{ runtime: 'nodejs22.x' }"),
     platformFile: {
@@ -63,7 +63,7 @@ pages_build_output_dir = ".svelte-kit/cloudflare"
   netlify: () => ({
     adapterPackage: '@sveltejs/adapter-netlify',
     adapterVersion: STACK.adapterNetlify,
-    cliDeps: { 'netlify-cli': '^24.0.0' },
+    cliDeps: { 'netlify-cli': '^26.0.2' },
     deployScript: 'netlify deploy --prod',
     svelteConfig: svelteConfigFor('@sveltejs/adapter-netlify', ''),
     platformFile: {
