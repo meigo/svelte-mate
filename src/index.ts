@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import chalk from 'chalk';
 import { DEPLOY_TARGETS, type DeployTarget } from './deploy.js';
-import { collectPrompt, selectOption } from './dialog.js';
+import { askText, collectPrompt, selectOption } from './dialog.js';
 import { gitHead, projectChangedSince } from './git-state.js';
 import { log } from './logger.js';
 import { readProjectConfig, writeProjectConfig } from './project-config.js';
@@ -27,6 +27,7 @@ The prompt is collected interactively. You may also pass it as a trailing quoted
 ${chalk.bold('Options:')}
   --model <id>            Claude model (skips interactive pick). e.g. claude-sonnet-4-6
   --deploy <target>       Deployment target (skips interactive pick): none|cloudflare|vercel|netlify
+  --site <url>            Production URL for canonical + sitemap (skips the prompt)
   --max-retries <n>       Outer retry budget when verification fails (default: 3)
   --timeout <seconds>     Per-attempt agent timeout (default: 3600)
 
@@ -45,6 +46,7 @@ interface ParsedArgs {
   maxRetries: number;
   model?: string;
   deploy?: DeployTarget;
+  site?: string;
   timeoutSec: number;
 }
 
@@ -87,6 +89,7 @@ function parseArgs(argv: string[]): ParsedArgs | { error: string } {
     maxRetries: maxRetriesRaw ? Math.max(1, Number.parseInt(maxRetriesRaw, 10) || 3) : 3,
     model: flags.model,
     deploy,
+    site: flags.site && flags.site !== 'true' ? flags.site : undefined,
     timeoutSec: timeoutRaw ? Math.max(60, Number.parseInt(timeoutRaw, 10) || 3600) : 3600,
   };
 }
@@ -132,6 +135,13 @@ async function cmdNew(args: ParsedArgs): Promise<void> {
   const deployTarget =
     args.deploy ?? (await selectOption('Pick a deployment target:', DEPLOY_TARGETS, 0));
 
+  const site =
+    args.site ??
+    (await askText(
+      'Production URL (canonical + sitemap; optional, Enter to skip):',
+      'e.g. https://example.com',
+    ));
+
   let userPrompt = args.prompt;
   if (!userPrompt) {
     userPrompt = await collectPrompt('Describe the site you want to build:');
@@ -141,7 +151,7 @@ async function cmdNew(args: ParsedArgs): Promise<void> {
     process.exit(1);
   }
 
-  const scaffoldResult = scaffold(outDir, { deployTarget });
+  const scaffoldResult = scaffold(outDir, { deployTarget, site });
   if (!scaffoldResult.ok) {
     log.fail(scaffoldResult.error ?? 'Scaffold failed');
     if (scaffoldResult.existingFiles && scaffoldResult.existingFiles.length > 0) {
@@ -156,7 +166,7 @@ async function cmdNew(args: ParsedArgs): Promise<void> {
     process.exit(1);
   }
 
-  writeProjectConfig(outDir, { model, deployTarget });
+  writeProjectConfig(outDir, { model, deployTarget, site: site || undefined });
 
   const skillResult = installSvelteSkills(outDir);
   if (!skillResult.ok) {

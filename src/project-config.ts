@@ -7,6 +7,7 @@ export const CONFIG_FILENAME = '.svelte-mate.json';
 export interface ProjectConfig {
   model: string;
   deployTarget: DeployTarget;
+  site?: string;
 }
 
 export function readProjectConfig(dir: string): Partial<ProjectConfig> | null {

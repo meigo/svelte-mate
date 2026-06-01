@@ -46,6 +46,18 @@ export function selectOption<T extends string>(
   });
 }
 
+export function askText(label: string, hint?: string): Promise<string> {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    console.log(chalk.cyan('▸'), chalk.bold(label));
+    if (hint) console.log(chalk.dim(`  ${hint}`));
+    rl.question(chalk.dim('  > '), (ans) => {
+      rl.close();
+      resolve(ans.trim());
+    });
+  });
+}
+
 export function collectPrompt(label: string): Promise<string> {
   return new Promise((resolve) => {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
