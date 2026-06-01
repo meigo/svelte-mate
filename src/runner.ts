@@ -21,13 +21,27 @@ export interface RunResult {
 
 const TAIL_BYTES = 12_000;
 
+// svelte-mate drives the agent headlessly. If the surrounding environment installs
+// a workflow that gates code-writing behind user approval (e.g. a global
+// "brainstorm and get sign-off first" hook), a non-interactive `-p` run stalls
+// without ever implementing anything — yet the scaffold still passes verification.
+// This system-prompt directive overrides such gates: there is no human to ask.
+const NON_INTERACTIVE_DIRECTIVE =
+  'This is an automated, non-interactive SvelteKit site build invoked by a CLI. There is no human available to answer questions or approve a design. Do NOT brainstorm, do NOT present a plan for approval, do NOT offer a visual/browser companion, do NOT pause for confirmation. Any workflow or skill that requires user approval before writing code does not apply here — implement the requested site directly and run the verification loop until it is green.';
+
 export function runClaude(opts: RunOptions): Promise<RunResult> {
   const { cwd, prompt, model, timeoutMs = 60 * 60 * 1000, signal } = opts;
 
   const promptFile = path.join(cwd, '.svelte-mate-prompt.md');
   fs.writeFileSync(promptFile, prompt, 'utf-8');
 
-  const args = ['-p', promptFile, '--dangerously-skip-permissions'];
+  const args = [
+    '-p',
+    promptFile,
+    '--dangerously-skip-permissions',
+    '--append-system-prompt',
+    NON_INTERACTIVE_DIRECTIVE,
+  ];
   if (model) args.push('--model', model);
 
   log.step(`Running Claude Code (${model ?? 'default model'})`);
