@@ -1,18 +1,19 @@
 export const STACK = {
-  svelte: '^5.0.0',
-  sveltekit: '^2.0.0',
-  vitePluginSvelte: '^5.0.0',
-  adapterAuto: '^3.0.0',
-  adapterCloudflare: '^5.0.0',
-  adapterVercel: '^5.0.0',
-  adapterNetlify: '^5.0.0',
-  svelteCheck: '^4.0.0',
-  vite: '^6.0.0',
-  tailwind: '^4.0.0',
-  biome: '^1.9.4',
-  prettier: '^3.3.0',
-  prettierPluginSvelte: '^3.3.0',
-  typescript: '^5.7.0',
+  svelte: '^5.56.0',
+  sveltekit: '^2.61.1',
+  vitePluginSvelte: '^7.1.2',
+  adapterAuto: '^7.0.1',
+  adapterCloudflare: '^7.2.8',
+  adapterVercel: '^6.3.3',
+  adapterNetlify: '^6.0.4',
+  svelteCheck: '^4.5.0',
+  vite: '^8.0.0',
+  tailwind: '^4.3.0',
+  biome: '^2.4.16',
+  prettier: '^3.8.3',
+  prettierPluginSvelte: '^4.1.0',
+  typescript: '^6.0.0',
+  fontsourceInter: '^5.2.8',
 } as const;
 
 export const SKILL_REPO = 'https://github.com/sveltejs/ai-tools.git';
@@ -27,11 +28,12 @@ export const STACK_SUMMARY = [
   `svelte-check ${STACK.svelteCheck}`,
   `Biome ${STACK.biome} (lint + format for .ts/.js/.json)`,
   `Prettier ${STACK.prettier} + prettier-plugin-svelte ${STACK.prettierPluginSvelte} (format for .svelte)`,
+  `@fontsource-variable/inter ${STACK.fontsourceInter} (self-hosted Inter, wired to Tailwind --font-sans)`,
   `TypeScript ${STACK.typescript} (strict)`,
 ].join(', ');
 
 export const MODEL_OPTIONS: { value: string; label: string; hint?: string }[] = [
-  { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6', hint: 'balanced, fast' },
-  { value: 'claude-opus-4-6', label: 'Claude Opus 4.6', hint: 'smartest, slowest, costliest' },
-  { value: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', hint: 'cheap, best for small edits' },
+  { value: 'sonnet', label: 'Claude Sonnet (latest)', hint: 'balanced, fast — currently 4.6' },
+  { value: 'opus', label: 'Claude Opus (latest)', hint: 'smartest, costliest — currently 4.8' },
+  { value: 'haiku', label: 'Claude Haiku (latest)', hint: 'cheap, small edits — currently 4.5' },
 ];
