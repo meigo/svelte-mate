@@ -4,14 +4,15 @@ A focused CLI that generates **SvelteKit 2 + Svelte 5 + Tailwind v4 + Biome** we
 
 The stack is locked and explicit so the agent can't guess-and-fail:
 
-- SvelteKit `^2.0.0` (adapter chosen at scaffold time)
-- Svelte `^5.0.0` (runes mode)
-- Tailwind CSS `^4.0.0` wired via `@tailwindcss/vite` — not the PostCSS plugin
-- Vite `^6.0.0`
-- `svelte-check` `^4.0.0` for `.svelte` + TypeScript type-checking
-- Biome `^1.9.4` (linter + formatter for `.ts` / `.js` / `.json` — no ESLint)
-- Prettier `^3.3.0` + `prettier-plugin-svelte` `^3.3.0` (formatter for `.svelte` only)
-- TypeScript strict
+- SvelteKit `^2.61.1` (adapter chosen at scaffold time)
+- Svelte `^5.56.0` (runes mode)
+- Tailwind CSS `^4.3.0` wired via `@tailwindcss/vite` — not the PostCSS plugin
+- Vite `^8.0.0`
+- `svelte-check` `^4.5.0` for `.svelte` + TypeScript type-checking
+- Biome `^2.4.16` (linter + formatter for `.ts` / `.js` / `.json` — no ESLint)
+- Prettier `^3.8.3` + `prettier-plugin-svelte` `^4.1.0` (formatter for `.svelte` only)
+- `@fontsource-variable/inter` `^5.2.8` (self-hosted Inter, wired to Tailwind `--font-sans`)
+- TypeScript `^6.0.0` strict
 - The official [Svelte Claude Code skills](https://github.com/sveltejs/ai-tools) (`svelte-code-writer`, `svelte-core-bestpractices`) installed into `.claude/skills/`
 
 ## Install
@@ -32,9 +33,9 @@ Both commands operate on the **current directory** and collect everything **inte
 mkdir coffee-site && cd coffee-site
 svelte-mate new
 # ▸ Pick a Claude model:
-#   ● 1) Claude Sonnet 4.6   — balanced, fast
-#     2) Claude Opus 4.6     — smartest, slowest, costliest
-#     3) Claude Haiku 4.5    — cheap, best for small edits
+#   ● 1) Claude Sonnet (latest)  — balanced, fast — currently 4.6
+#     2) Claude Opus (latest)    — smartest, costliest — currently 4.8
+#     3) Claude Haiku (latest)   — cheap, small edits — currently 4.5
 #
 # ▸ Pick a deployment target:
 #   ● 1) None               — adapter-auto, wire up deployment later
@@ -54,16 +55,17 @@ svelte-mate fix
 `fix` remembers the model (and deploy target) that `new` picked by reading `.svelte-mate.json`. Override per-run with flags:
 
 ```bash
-svelte-mate new --model claude-opus-4-6 --deploy cloudflare "marketing site for a coffee roastery"
-svelte-mate fix --model claude-haiku-4-5-20251001 "tighten the hero copy"
+svelte-mate new --model opus --deploy cloudflare --site https://roastery.example "marketing site for a coffee roastery"
+svelte-mate fix --model haiku "tighten the hero copy"
 ```
 
 ### Options
 
 | Flag | Default | What it does |
 |---|---|---|
-| `--model <id>` | interactive on `new`, persisted for `fix` | `claude-sonnet-4-6`, `claude-opus-4-6`, `claude-haiku-4-5-20251001` |
+| `--model <id>` | interactive on `new`, persisted for `fix` | `sonnet`, `opus`, `haiku` (dynamic latest of each tier), or a full ID like `claude-opus-4-8` |
 | `--deploy <target>` | interactive on `new` | `none`, `cloudflare`, `vercel`, `netlify` |
+| `--site <url>` | interactive on `new` | Production URL for canonical tags + sitemap. Skippable; baked into `src/lib/site.ts`. |
 | `--max-retries <n>` | `3` | Outer retry budget when verification fails |
 | `--timeout <seconds>` | `3600` | Per-attempt agent timeout |
 
@@ -89,9 +91,21 @@ You'll need to authenticate with the platform once (`wrangler login`, `vercel lo
 
 Picking a specific adapter instead of keeping `adapter-auto` is a deliberate choice: `adapter-auto` detects the target at build time and installs the matching adapter on demand, which is flaky in reproducible CI. Pinning the adapter up front makes the scaffold deterministic.
 
+### SEO, fonts & AI discoverability
+
+Every scaffold ships a baseline so generated sites are discoverable and styled from day one:
+
+- **`Seo.svelte`** (`src/lib/components/`) — a `<svelte:head>` component: title, description, canonical URL, Open Graph, Twitter Card, and a JSON-LD slot. Render it per page with `title` + `description`.
+- **`src/routes/sitemap.xml/+server.ts`** — a prerendered sitemap that auto-lists static pages; emitted at build (SvelteKit has no first-party sitemap integration, so this is a small endpoint rather than a plugin).
+- **`static/robots.txt`** — allows all crawlers (incl. GPTBot, ClaudeBot, PerplexityBot, OAI-SearchBot, Google-Extended) and points at the sitemap.
+- **`src/lib/site.ts`** — the `SITE_URL` constant used for canonical tags + sitemap. Set it at `new` time (prompt or `--site`), or edit the `https://example.com` placeholder later.
+- **`@fontsource-variable/inter`** — a self-hosted variable font wired to Tailwind's `--font-sans` (no runtime Google request, no layout shift). The agent may swap it to fit the site.
+
+There is intentionally **no `llms.txt`**: as of 2026 the major AI crawlers skip it and read HTML directly. The agentic-SEO story here is structured data (JSON-LD) + an AI-friendly `robots.txt` + clean semantic HTML.
+
 ## What it does, step by step
 
-1. **Scaffolds** a fresh SvelteKit project into the current directory (empty required) with every config file pinned (`package.json`, `svelte.config.js`, `vite.config.ts`, `tsconfig.json`, `biome.json`, `src/app.html`, `src/app.css`, `src/app.d.ts`, `src/routes/+layout.svelte`, `src/routes/+page.svelte`). If you picked a deploy target, the adapter, platform config, and `npm run deploy` script are written too. Runs `npm install` + `svelte-kit sync`, commits the scaffold.
+1. **Scaffolds** a fresh SvelteKit project into the current directory (empty required) with every config file pinned (`package.json`, `svelte.config.js`, `vite.config.ts`, `tsconfig.json`, `biome.json`, `src/app.html`, `src/app.css`, `src/app.d.ts`, `src/routes/+layout.svelte`, `src/routes/+page.svelte`, `src/lib/site.ts`, `src/lib/components/Seo.svelte`, `src/routes/sitemap.xml/+server.ts`, `static/robots.txt`). If you picked a deploy target, the adapter, platform config, and `npm run deploy` script are written too. Runs `npm install` + `svelte-kit sync`, commits the scaffold.
 2. **Installs** the official Svelte Claude Code skills (`svelte-code-writer`, `svelte-core-bestpractices`) from `sveltejs/ai-tools` into `.claude/skills/` and writes a permissive `.claude/settings.json`. Saves your model + deploy choice to `.svelte-mate.json` so `fix` can reuse them.
 3. **Invokes Claude Code** in the project directory with an explicit prompt that declares the locked stack, points at the installed skills, and demands `svelte-check` + `biome check` + `prettier --check` + `vite build` all pass.
 4. **Verifies** by running those four commands itself after the agent exits.
