@@ -1,6 +1,6 @@
 {
   "name": "svelte-mate",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Focused CLI that generates SvelteKit + Tailwind v4 sites with Claude Code. Explicit stack, no guesswork.",
   "type": "module",
   "bin": {
